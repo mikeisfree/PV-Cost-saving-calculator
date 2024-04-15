@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulator kosztów energii</title>
+<style>
+  .container {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .form-container {
+    width: 30%; /* Ustawienie szerokości dla obu kontenerów */
+    background-color: #F9FAFD;
+  }
+
+  .container .form-container form label {
+    float;
+  }
+
+  .table-container {
+    width: 70%;
+  }
+  body,h2 {
+    color: black;
+  }
+    
+  input {
+    color: black;
+  }
+
+
+</style>
+</head>
+<body>
+<h2>Kalkulator kosztów energii</h2>
+<div class="container">
+  <div class="form-container">
+    <h3>Formularz</h3>
+    <form id="energyCalculator">
+      <label for="electricityCost2023">Koszt energii za rok 2023:</label>
+      <input type="number" id="electricityCost2023" name="electricityCost2023" required><br><br>
+      <label for="solarInstallationCost">Koszt założenia instalacji PV:</label>
+      <input type="number" id="solarInstallationCost" name="solarInstallationCost" required><br><br>
+      <input type="checkbox" id="taxRelief" name="taxRelief">
+      <label for="taxRelief">Ulga podatkowa</label><br>
+      <input type="checkbox" id="myPowerProgram" name="myPowerProgram">
+      <label for="myPowerProgram">Program "Mój Prąd"</label><br>
+      <input type="checkbox" id="increasedLimit" name="increasedLimit">
+      <label for="increasedLimit">Zwiększony limit</label><br><br>
+      <label for="paymentPeriod">Ilość Rat:</label>
+      <select id="paymentPeriod" name="paymentPeriod">
+        <option value="12">12</option>
+        <option value="24">24</option>
+        <option value="36">36</option>
+        <option value="48">48</option>
+        <option value="60">60</option>
+        <option value="72">72</option>
+      </select><br><br>
+      <input type="submit" value="Oblicz">
+    </form>
+  </div>
+  <div class="table-container">
+    <h3>Wyniki</h3>
+    <table id="resultsTable" border="1">
+      <tr>
+        <th>Rok</th>
+        <th>Koszt energii</th>
+        <th>Kumulowany koszt energii</th>
+        <th>Koszt instalacji PV</th>
+        <th>Uśredniony koszt na miesiąc</th>
+        <th>Średni koszt na miesiąc PV</th>
+        <th>Różnica</th>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<script>
+  document.getElementById('energyCalculator').addEventListener('submit', function(event) {
+    event.preventDefault(); // Prevent form submission
+  
+    // Get input values
+    const electricityCost2023 = parseFloat(document.getElementById('electricityCost2023').value);
+    let solarInstallationCost = parseFloat(document.getElementById('solarInstallationCost').value);
+    const taxRelief = document.getElementById('taxRelief').checked;
+    const myPowerProgram = document.getElementById('myPowerProgram').checked;
+    const increasedLimit = document.getElementById('increasedLimit').checked;
+    const paymentPeriod = parseInt(document.getElementById('paymentPeriod').value);
+  
+    // Apply deductions based on checkboxes
+    if (taxRelief) solarInstallationCost -= 1000;
+    if (myPowerProgram) {
+      solarInstallationCost -= 6000;
+  
+    }
+    let cumulativeMultiplier = 1.07;
+    if (increasedLimit) {
+      // Change multiplier from 1.07 to 1.02
+      cumulativeMultiplier = 1.02;
+    }
+  
+    // Initialize variables for table generation
+    let cumulativeCost = electricityCost2023;
+    let monthlyAverageCost = cumulativeCost / 12;
+    let cumulativeEnergyCost = cumulativeCost;
+    let cumulativeSolarCost = 0;
+    let monthlyAverageSolarCost = 0;
+    
+    // Clear previous table rows
+    const resultsTable = document.getElementById('resultsTable');
+    resultsTable.innerHTML = '<tr><th>Rok</th><th>Koszt energii</th><th>Kumulowany koszt energii</th><th>Uśredniony koszt na miesiąc</th><th>Koszt instalacji PV</th><th>Średni koszt na miesiąc PV</th><th>Różnica</th></tr>';
+    
+    // Loop through years from 2024 to 3034 or until 10 rows are added
+    for (let year = 2024; year <= 3034 && year <= 2033; year++) {
+      // Calculate solar installation cost per year
+      let yearlySolarCost = 0;
+      if (year >= 2024 && year <= (2024 + paymentPeriod / 12 - 1)) {
+        yearlySolarCost = solarInstallationCost / (paymentPeriod / 12);
+      }
+      
+      // Add solar installation cost to cumulative solar cost
+      cumulativeSolarCost += yearlySolarCost;
+      // Calculate monthly average solar cost
+      monthlyAverageSolarCost = cumulativeSolarCost / 12;
+      
+      // Calculate difference between electricity cost and solar cost
+      let difference = monthlyAverageSolarCost - monthlyAverageCost;
+      
+      // Add row to table
+      resultsTable.innerHTML += `<tr><td>${year}</td><td>${Math.round(cumulativeCost)}</td><td>${Math.round(cumulativeEnergyCost)}</td><td>${Math.round(monthlyAverageCost)}</td><td>${Math.round(yearlySolarCost)}</td><td>${Math.round(yearlySolarCost / 12)}</td><td>${Math.round(difference)}</td></tr>`;
+
+
+      // Calculate next year's cumulative cost and monthly average cost
+      cumulativeCost *= cumulativeMultiplier;
+      monthlyAverageCost = cumulativeCost / 12;
+  
+      // Update cumulative energy cost
+      cumulativeEnergyCost += cumulativeCost;
+    }
+  });
+  </script>
+
+<script>document.write('<script src="http://'
+  + (location.host || 'localhost').split(':')[0]
+  + ':35729/livereload.js?snipver=1"></'
+  + 'script>')</script>
+
+</body>
+</html>
